@@ -8,8 +8,8 @@ df = pd.read_csv("enhanced_poi_dataset_with_hours.csv")
 df["Maximum Bending Moment (Ft-Kips)"] = pd.to_numeric(df["Maximum Bending Moment (Ft-Kips)"].astype(str).str.extract(r"([\d.]+)")[0], errors='coerce')
 
 
-df = pd.DataFrame(data)
-df["Maximum Bending Moment (Ft-Kips)"] = pd.to_numeric(df["Maximum Bending Moment (Ft-Kips)"].astype(str).str.extract(r"([\d.]+)")[0], errors='coerce')
+
+
 
 st.title("Transmission POI Structure Analyzer")
 st.markdown("Compare the cost of reusing an existing deadend structure versus designing a custom one.")
