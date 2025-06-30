@@ -3,28 +3,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Embedded dataset (converted from CSV)
-data = {
-    'Str #': ['43B', '3/17', '3/17A'],
-    'Project Name': ['A', 'B', 'B'],
-    'Type': ['Deadend', 'Deadend', 'Deadend'],
-    'Height (Feet)': [65.0, 90.0, 105.0],
-    'Weight (lbs)': [9372, 8664, 15291],
-    'Maximum Bending Moment (Ft-Kips)': ['2454.22', '1522.89 Ft-Kips', '2959.91 Ft-Kips'],
-    'Ground - Phase Spacing (Feet)': [12.0, 12.0, 12.0],
-    'Phase - Phase Spacing (Feet)': [10.0, 10.0, 11.0],
-    'Voltage': ['138kV', '138kV', '138kV'],
-    'Cost': [34182.67, 34051.49, 49085.7],
-    'Quote Date': ['2025-04-21', '2024-09-01', '2024-09-02'],
-    'NESC Zone': ['Medium', 'Medium', 'Medium'],
-    'Wind Zone': [95, 95, 110],
-    'Schedule': ['Expedited', 'Normal', 'Normal'],
-    'Engineer hours': [39.0, 27.0, 27.0],
-    'Engineer Experience Level': ['Intermediate', 'Intermediate', 'Intermediate'],
-    'Designer Hours': [26.0, 18.0, 18.0],
-    'Designer Experience Level': ['Intermediate', 'Intermediate', 'Intermediate'],
-    'Project Complexity': ['Low', 'Low', 'Low']
-}
+# Load the full dataset from the CSV in the repo
+df = pd.read_csv("enhanced_poi_dataset_with_hours.csv")
+df["Maximum Bending Moment (Ft-Kips)"] = pd.to_numeric(df["Maximum Bending Moment (Ft-Kips)"].astype(str).str.extract(r"([\d.]+)")[0], errors='coerce')
+
 
 df = pd.DataFrame(data)
 df["Maximum Bending Moment (Ft-Kips)"] = pd.to_numeric(df["Maximum Bending Moment (Ft-Kips)"].astype(str).str.extract(r"([\d.]+)")[0], errors='coerce')
