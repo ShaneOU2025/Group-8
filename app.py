@@ -1,80 +1,79 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
-# Load the full dataset from the CSV in the repo
-df = pd.read_csv("enhanced_poi_dataset_with_hours.csv")
-df["Maximum Bending Moment (Ft-Kips)"] = pd.to_numeric(df["Maximum Bending Moment (Ft-Kips)"].astype(str).str.extract(r"([\d.]+)")[0], errors='coerce')
-
-
-
-
-
-st.title("Transmission POI Structure Analyzer")
-st.markdown("Compare the cost of reusing an existing deadend structure versus designing a custom one.")
-
-# --- User Inputs ---
-st.sidebar.header("Design Requirements")
-required_moment = st.sidebar.number_input("Required Bending Moment (Ft-Kips)", min_value=0.0, value=2500.0)
-required_height = st.sidebar.number_input("Required Structure Height (Feet)", min_value=0.0, value=90.0)
-
-schedule = st.sidebar.selectbox("Project Schedule", ["Slow", "Normal", "Expedited"])
-complexity = st.sidebar.selectbox("Project Complexity", ["Low", "Medium", "High"])
-
-# --- Engineering Assumptions ---
-steel_rate = 3.50  # $/lb
-hourly_rate = 150  # $/hr
-avg_weight = df["Weight (lbs)"].mean()
-avg_engineer_hours = df["Engineer hours"].astype(float).mean()
-avg_moment = df["Maximum Bending Moment (Ft-Kips)"].mean()
-
-schedule_weights = {"Slow": -0.20, "Normal": 0.0, "Expedited": 0.40}
-complexity_weights = {"Low": -0.10, "Medium": 0.0, "High": 0.15}
-
-# --- Adjust Engineering Hours ---
-adjusted_engineer_hours = avg_engineer_hours * (1 + schedule_weights[schedule] + complexity_weights[complexity])
-
-# --- Estimate Custom Structure Cost ---
-cost_steel_custom = steel_rate * (required_moment / avg_moment) * avg_weight
-cost_engineering_custom = adjusted_engineer_hours * hourly_rate
-custom_total_cost = cost_steel_custom + cost_engineering_custom
-
-# --- Find Reusable Structures ---
-matches = df[(df["Maximum Bending Moment (Ft-Kips)"] >= required_moment) &
-             (df["Height (Feet)"] >= required_height)]
-
-st.subheader("Reusable Structures That Meet Requirements")
-st.write(f"Found {len(matches)} structure(s) that meet or exceed requirements.")
-st.dataframe(matches[["Str #", "Height (Feet)", "Maximum Bending Moment (Ft-Kips)", "Weight (lbs)", "Cost"]])
-
-# --- Compare Costs ---
-st.subheader("Cost Comparison")
-
-if not matches.empty:
-    best_existing_cost = matches["Cost"].min()
-    st.write(f"Lowest Cost of Reusable Structure: **${best_existing_cost:,.2f}**")
-else:
-    best_existing_cost = float('inf')
-    st.write("No existing structure meets requirements.")
-
-st.write(f"Estimated Custom Structure Cost: **${custom_total_cost:,.2f}**")
-
-# --- Recommendation ---
-if custom_total_cost < best_existing_cost:
-    st.success("✅ Recommend: Design a Custom Structure")
-else:
-    st.success("✅ Recommend: Reuse an Existing Structure")
-
-# --- Visualization ---
-st.subheader("Visual Cost Comparison")
-costs = {
-    "Custom Design": custom_total_cost,
-    "Best Existing": best_existing_cost if best_existing_cost < float('inf') else 0
+# --- Sample Data (replace with your actual CSV or database logic) ---
+data = {
+    "Str #": ["3/17A", "3/17H", "26/2B", "26/2C", "26/6A", "26/6B", "71", "72", "128", "53"],
+    "Height (Feet)": [105, 100, 90, 90, 90, 90, 120.5, 120.6, 135.5, 140.6],
+    "Maximum Bending Moment (Ft-Kips)": [2959.91, 2794.86, 4962.98, 3708, 3328.93, 3073.23, 12375, 12375, 14624.1, 15382.1],
+    "Weight (lbs)": [15921, 13637, 17294, 14164, 13346, 12775, 44377, 44377, 54790, 57879],
+    "Cost": [49085.7, 45381.59, 54159.58, 44840.39, 42854.39, 41070.8, 113870.6, 113870.6, 139692.07, 146899.27]
 }
+df = pd.DataFrame(data)
 
+# --- Sidebar Inputs ---
+st.sidebar.title("Design Requirements")
+moment_req = st.sidebar.number_input("Required Bending Moment (Ft-Kips)", min_value=0.0, value=2500.0, help="Minimum required at POI")
+height_req = st.sidebar.number_input("Required Structure Height (Feet)", min_value=0.0, value=90.0, help="Minimum structure height")
+
+st.sidebar.selectbox("Project Schedule", ["Slow", "Moderate", "Fast"], help="Speed of construction timeline")
+st.sidebar.selectbox("Project Complexity", ["Low", "Medium", "High"], help="Site-specific and engineering challenges")
+
+# --- Filter Structures Based on Requirements ---
+filtered_df = df[(df["Maximum Bending Moment (Ft-Kips)"] >= moment_req) & (df["Height (Feet)"] >= height_req)]
+
+# Optional: Sort by cost
+sort_option = st.selectbox("Sort reusable structures by:", ["Cost", "Weight", "Height"])
+sort_column = {"Cost": "Cost", "Weight": "Weight (lbs)", "Height": "Height (Feet)"}[sort_option]
+filtered_df = filtered_df.sort_values(by=sort_column)
+
+# --- Cost Comparison ---
+lowest_cost = filtered_df["Cost"].min() if not filtered_df.empty else None
+custom_cost = 38332.73  # Replace with dynamic calc if applicable
+
+# --- Title ---
+st.title("Transmission POI Structure Analyzer")
+st.write("Compare the cost of reusing an existing deadend structure versus designing a custom one.")
+
+# --- Table Display ---
+st.subheader("Reusable Structures That Meet Requirements")
+st.write(f"Found {len(filtered_df)} structure(s) that meet or exceed requirements.")
+st.dataframe(filtered_df, use_container_width=True)
+
+# --- Cost Metric Comparison ---
+st.subheader("Cost Comparison")
+col1, col2 = st.columns(2)
+col1.metric("Lowest Reuse Structure Cost", f"${lowest_cost:,.2f}" if lowest_cost else "N/A")
+col2.metric("Estimated Custom Cost", f"${custom_cost:,.2f}")
+
+# --- Recommendation Box ---
+if lowest_cost and lowest_cost > custom_cost:
+    st.success("✅ Custom structure is recommended.\nLower cost and tailored performance.")
+elif lowest_cost:
+    st.warning("⚠️ Consider using an existing structure.\nIt may save cost if schedule or complexity are key.")
+else:
+    st.error("❌ No reusable structures meet the requirements.\nCustom structure required.")
+
+# --- Optional: Highlight recommended structure
+if lowest_cost:
+    rec_row = filtered_df[filtered_df["Cost"] == lowest_cost].iloc[0]
+    st.markdown(f"""
+    ### 🏗️ Recommended Structure
+    - **Structure ID**: `{rec_row["Str #"]}`
+    - **Height**: `{rec_row["Height (Feet)"]} ft`
+    - **Moment Capacity**: `{rec_row["Maximum Bending Moment (Ft-Kips)"]} Ft-Kips`
+    - **Cost**: `${rec_row["Cost"]:,.2f}`
+    """)
+
+# --- Bar Chart ---
+st.subheader("Visual Cost Comparison")
 fig, ax = plt.subplots()
-ax.bar(costs.keys(), costs.values(), color=["purple", "green"])
-ax.set_ylabel("Total Cost ($)")
+bars = ax.bar(["Custom", "Lowest Reuse"], [custom_cost, lowest_cost if lowest_cost else 0], color=["purple", "green"])
+ax.set_ylabel("Cost ($)")
 ax.set_title("Custom vs Existing Structure Cost")
+for bar in bars:
+    height = bar.get_height()
+    ax.annotate(f'${height:,.0f}', xy=(bar.get_x() + bar.get_width() / 2, height),
+                xytext=(0, 3), textcoords="offset points", ha='center', fontsize=9)
 st.pyplot(fig)
