@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import altair as alt
+
 
 # --- Sample Data (replace with your actual CSV or database logic) ---
 data = {
@@ -66,14 +68,47 @@ if lowest_cost:
     - **Cost**: `${rec_row["Cost"]:,.2f}`
     """)
 
-# --- Bar Chart ---
+# --- Interactive Altair Bar Chart ---
+import pandas as pd
+import altair as alt
+
 st.subheader("Visual Cost Comparison")
-fig, ax = plt.subplots()
-bars = ax.bar(["Custom", "Lowest Reuse"], [custom_cost, lowest_cost if lowest_cost else 0], color=["purple", "green"])
-ax.set_ylabel("Cost ($)")
-ax.set_title("Custom vs Existing Structure Cost")
-for bar in bars:
-    height = bar.get_height()
-    ax.annotate(f'${height:,.0f}', xy=(bar.get_x() + bar.get_width() / 2, height),
-                xytext=(0, 3), textcoords="offset points", ha='center', fontsize=9)
-st.pyplot(fig)
+
+# Prepare data
+cost_data = pd.DataFrame({
+    'Structure Type': ['Custom', 'Lowest Reuse'],
+    'Cost': [custom_cost, lowest_cost if lowest_cost else 0]
+})
+
+# Create Altair chart
+chart = (
+    alt.Chart(cost_data)
+    .mark_bar()
+    .encode(
+        x=alt.X('Structure Type:N', title='Structure Type'),
+        y=alt.Y('Cost:Q', title='Cost ($)', scale=alt.Scale(zero=True)),
+        color=alt.Color('Structure Type:N', scale=alt.Scale(domain=['Custom', 'Lowest Reuse'],
+                                                           range=['#7B2CBF', '#2B9348'])),
+        tooltip=[alt.Tooltip('Structure Type:N'), alt.Tooltip('Cost:Q', format='$,.2f')]
+    )
+    .properties(
+        width=500,
+        height=300,
+        title='Custom vs Existing Structure Cost'
+    )
+)
+
+# Add labels on top of bars
+text = (
+    alt.Chart(cost_data)
+    .mark_text(dy=-10, fontSize=14, fontWeight='bold')
+    .encode(
+        x='Structure Type:N',
+        y='Cost:Q',
+        text=alt.Text('Cost:Q', format='$,.0f')
+    )
+)
+
+# Display chart
+st.altair_chart(chart + text, use_container_width=True)
+st.caption("This chart compares the estimated cost of a custom structure versus the lowest-cost reusable structure that meets requirements.")
