@@ -4,15 +4,28 @@ import matplotlib.pyplot as plt
 import altair as alt
 
 
-# --- Sample Data (replace with your actual CSV or database logic) ---
+import numpy as np
+import pandas as pd
+
+# --- Generate 100-Structure Dataset in Code ---
+np.random.seed(42)
+
+structure_ids = [f"STR-{i+1}" for i in range(100)]
+heights = np.round(np.random.uniform(60, 195, 100), 1)
+moments = np.round(4000 * np.random.uniform(0.5, 1.5, 100), 2)
+weights = np.round(20000 * np.random.uniform(0.5, 1.5, 100), 0)
+costs = np.round(50000 * np.random.uniform(0.5, 1.5, 100), 2)
+
 data = {
-    "Str #": ["3/17A", "3/17H", "26/2B", "26/2C", "26/6A", "26/6B", "71", "72", "128", "53"],
-    "Height (Feet)": [105, 100, 90, 90, 90, 90, 120.5, 120.6, 135.5, 140.6],
-    "Maximum Bending Moment (Ft-Kips)": [2959.91, 2794.86, 4962.98, 3708, 3328.93, 3073.23, 12375, 12375, 14624.1, 15382.1],
-    "Weight (lbs)": [15921, 13637, 17294, 14164, 13346, 12775, 44377, 44377, 54790, 57879],
-    "Cost": [49085.7, 45381.59, 54159.58, 44840.39, 42854.39, 41070.8, 113870.6, 113870.6, 139692.07, 146899.27]
+    "Str #": structure_ids,
+    "Height (Feet)": heights,
+    "Maximum Bending Moment (Ft-Kips)": moments,
+    "Weight (lbs)": weights,
+    "Cost": costs
 }
+
 df = pd.DataFrame(data)
+
 
 # --- Sidebar Inputs ---
 st.sidebar.title("Design Requirements")
