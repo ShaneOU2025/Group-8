@@ -7,11 +7,12 @@ import altair as alt
 import numpy as np
 import pandas as pd
 
+
 # --- Generate 100-Structure Dataset in Code ---
 np.random.seed(42)
 
 structure_ids = [f"STR-{i+1}" for i in range(100)]
-heights = np.round(np.random.uniform(60, 195, 100), 1)
+heights = np.round(np.random.uniform(60, 195, 100)).astype(int)  # now rounded to nearest whole foot
 moments = np.round(4000 * np.random.uniform(0.5, 1.5, 100), 2)
 weights = np.round(20000 * np.random.uniform(0.5, 1.5, 100), 0)
 costs = np.round(50000 * np.random.uniform(0.5, 1.5, 100), 2)
@@ -25,6 +26,7 @@ data = {
 }
 
 df = pd.DataFrame(data)
+
 
 
 # --- Sidebar Inputs ---
